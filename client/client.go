@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -26,8 +27,8 @@ func ExecuteRemoteCommand(serverAddress, username, password, command string) (st
 		log.Fatal("Failed to create session: ", err)
 	}
 	defer session.Close()
-
-	output, err := session.CombinedOutput(command)
+	fmt.Println(strings.TrimRight(command, "\r\n"))
+	output, err := session.CombinedOutput(strings.TrimRight(command, "\r\n"))
 	if err != nil {
 		return "", fmt.Errorf("failed to run command: %s", err)
 	}
