@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func ExecuteRemoteCommand(serverAddress, username, password, command string) (string, error) {
+func ExecuteRemoteCommand(serverAddress string, username string, password string, channel chan string) {
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
@@ -26,11 +26,26 @@ func ExecuteRemoteCommand(serverAddress, username, password, command string) (st
 	if err != nil {
 		log.Fatal("Failed to create session: ", err)
 	}
+	stdinBuf, _ := session.StdinPipe()
+
+	session.Shell()
+	srdoutBuf, _ := session.StdoutPipe()
 	defer session.Close()
-	fmt.Println(strings.TrimRight(command, "\r\n"))
-	output, err := session.CombinedOutput(strings.TrimRight(command, "\r\n"))
-	if err != nil {
-		return "", fmt.Errorf("failed to run command: %s", err)
+	for {
+		command := <-channel
+		formattedCommand := strings.TrimRight(command, "\r\n")
+		if formattedCommand == "END" {
+			fmt.Println("end connection to the server")
+			return
+		}
+		fmt.Println(formattedCommand)
+		stdinBuf.Write([]byte(formattedCommand))
+		// output, err := session.CombinedOutput(formattedCommand)
+		// if err != nil {
+		// 	fmt.Printf("failed to run command: %s", err)
+		// }
+		results := make([]byte, 4000)
+		srdoutBuf.Read(results)
+		fmt.Println(string(results))
 	}
-	return string(output), nil
 }

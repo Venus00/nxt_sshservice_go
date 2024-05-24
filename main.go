@@ -12,6 +12,8 @@ import (
 
 func main() {
 	fmt.Println("**REMOTE EEXCUTE BASH COMMAND VIA SSH PROTOCOL**")
+	fmt.Println("Init websocket server")
+	//S.InitConnection()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	c := make(chan string)
@@ -53,21 +55,8 @@ func main() {
 	}()
 
 	go func() {
-		for {
-			fmt.Println("ssh client waiting command to connect")
-			command := <-c
-			if command == "test" {
-				wg.Done()
-			}
-			output, err := C.ExecuteRemoteCommand(strings.TrimRight(serverAddress, "\r\n"), strings.TrimRight(username, "\r\n"), strings.TrimRight(password, "\r\n"), command)
-			if err != nil {
-				fmt.Printf("Error: %s\n", err)
-			}
-
-			fmt.Println("Command output:")
-			fmt.Println(output)
-		}
-
+		fmt.Println("ssh client start connection to the server")
+		C.ExecuteRemoteCommand(strings.TrimRight(serverAddress, "\r\n"), strings.TrimRight(username, "\r\n"), strings.TrimRight(password, "\r\n"), c)
 	}()
 	wg.Wait()
 }
